@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ block.super }}
+<div>Today is:</div>
+<div>
+    Year: <b>{{ epTime.Year }}</b> Month: <b>{{ epTime.Month }}</b> Day: <b>{{ epTime.Day }}</b>
+    Hour: <b>{{ epTime.Hour }}</b> Minute: <b>{{ epTime.Minute }}</b> Second: <b>{{ epTime.Second }}</b>
+</div>
+{% endblock %}

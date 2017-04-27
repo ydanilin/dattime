@@ -14,6 +14,7 @@ class Epocher:
     time: all variables containing "time" always expressed in seconds
     """
     def __init__(self):
+        # print('Epocher instantiated')
         self.baseYear = 1976
         self.baseMonth = 7
         self.baseDay = 14
