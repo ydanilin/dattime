@@ -1,0 +1,40 @@
+"C:\Program Files (x86)\Miniconda2\Lib\idlelib\idle.bat"
+
+D:\Dela2\G\Pitonizm\bagira01_project\bagira
+C:\Users\Yuretzz\Documents\Pitonizm\bagira01_project\bagira
+
+in environment:
+django-admin.py startapp main01
+
+python manage.py runserver
+http://127.0.0.1:8000
+
+
+conda info --envs
+activate django_one
+
+
+ Django установлен.
+Для запуска своего приложения необходимо:
+
+    Удалить файлы из директории /var/www/django/project и заменить их своим приложением
+
+    В файлах конфигурации nginx и uwsgi (/etc/nginx/conf.d/django.conf , /etc/uwsgi.d/django.ini , /etc/uwsgi/app-enabled/django.ini (в зависимости от ОС)) заменить mysite на имя Вашего приложения(его директорию)
+
+    Перезапустить nginx и uwsgi: service nginx restart ; service uwsgi restart
+
+Доступ к серверу для администратора
+
+    IP-адрес сервера : 80.87.193.53
+    Пользователь : root
+    Пароль : eKYFELTN3ELn
+
+gzip -r DIR # r = recursively on dirs
+other: -f = force overwrite
+       -k = keep source
+
+
+source venv/bin/activate
+python manage.py collectstatic
+
+
