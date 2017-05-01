@@ -1,16 +1,21 @@
 {% extends "base.html" %}
-
+{% load staticfiles %}
 {% block content %}
 {{ block.super }}
 BIRTHDAY
-<form method="post" action="{% url 'birthday' %}">
+<form method="post" id="whenborn" action="{% url 'birthday' %}">
 {% csrf_token %}
 <!-- This line inserts a CSRF token. -->
 <table>
 {{ form.as_table }}
 <!-- This line displays lines of the form.-->
 </table>
-<p><input type="submit" value="Create" /></p>
+<p><input type="submit" value="Calculate" /></p>
 </form>
+<div id="epoch_dob"></div>
+<div id="epoch_age"></div>
+<div id="epoch_nextdob"></div>
+<div id="world_nextdob"></div>
 {% include "footer_menu.html" with items=footerItems %}
+<script src="{% static 'main.js' %}" type="text/javascript"></script>
 {% endblock %}

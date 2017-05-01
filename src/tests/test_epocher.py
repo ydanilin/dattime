@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 from ..epoch import Epocher
 
+
 class Epocher_Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

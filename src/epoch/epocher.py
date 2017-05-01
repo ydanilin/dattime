@@ -147,6 +147,9 @@ class Epocher:
         diff = epDobSeconds - epMomentSeconds
         return self.epochSecondsToEpochTime(diff)
 
+    def getEpochEventDate(self, timezone, year, month, day, hour, minu, sec=0):
+        return self.getEpochDob(timezone, year, month, day, hour, minu, sec)
+
 if __name__ == '__main__':
     ep = Epocher()
     ep.adjustBaseTime(0)
