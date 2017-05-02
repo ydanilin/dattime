@@ -1,6 +1,5 @@
 # coding=utf-8
 from datetime import datetime, timedelta
-from time import gmtime
 from calendar import timegm
 
 
@@ -18,15 +17,50 @@ class Epocher:
         self.baseYear = 1976
         self.baseMonth = 7
         self.baseDay = 14
-        self.baseHour = 11  # in UTC
+        self.baseHour = 13  # in UTC+2
         self.baseMinute = 30
-        self.wBaseTime = 0  # in world seconds
+        dt = datetime(self.baseYear,
+                      self.baseMonth,
+                      self.baseDay,
+                      self.baseHour,
+                      self.baseMinute)
+        self.wBaseTime = timegm(dt.timetuple())  # in world seconds
         self.newSecondRatio = 0.864
         self.ratioMinutes = 10
         self.ratioHours = self.ratioMinutes * 100
         self.ratioDays = self.ratioHours * 100
         self.ratioMonths = self.ratioDays * 100
         self.ratioYears = self.ratioMonths * 10
+        self.wMinute = 60
+        self.wHour = 60
+        self.wDay = 24
+        self.wMonth = 30.4167
+        self.wYear = 12
+
+    def getToAltConversionRatios(self):
+        rSec =    1 / self.newSecondRatio
+        rMin =   (1 * self.wMinute) / \
+                 (self.newSecondRatio * self.ratioMinutes)
+        rHour =  (1 * self.wMinute * self.wHour) / \
+                 (self.newSecondRatio * self.ratioHours )
+        rDay =   (1 * self.wMinute * self.wHour * self.wDay) / \
+                 (self.newSecondRatio * self.ratioDays)
+        rMonth = (1 * self.wMinute * self.wHour * self.wDay * self.wMonth) / \
+                 (self.newSecondRatio * self.ratioMonths)
+        rYear =  (1 * self.wMinute * self.wHour * self.wDay * self.wMonth * self.wYear) / \
+                 (self.newSecondRatio * self.ratioYears)
+        return dict(rSec=round(rSec, 3), rMin=round(rMin, 3), rHour=round(rHour, 3),
+                    rDay=round(rDay, 3), rMonth=round(rMonth, 3), rYear=round(rYear, 3))
+
+    def getToWorldConversionRatios(self):
+        rSec =    self.newSecondRatio / 1
+        rMin =   (self.newSecondRatio * self.ratioMinutes) / (1 * self.wMinute)
+        rHour =  (self.newSecondRatio * self.ratioHours ) / (1 * self.wMinute * self.wHour)
+        rDay =   (self.newSecondRatio * self.ratioDays) / (1 * self.wMinute * self.wHour * self.wDay)
+        rMonth = (self.newSecondRatio * self.ratioMonths) / (1 * self.wMinute * self.wHour * self.wDay * self.wMonth)
+        rYear =  (self.newSecondRatio * self.ratioYears) / (1 * self.wMinute * self.wHour * self.wDay * self.wMonth * self.wYear)
+        return dict(rSec=round(rSec, 3), rMin=round(rMin, 3), rHour=round(rHour, 3),
+                    rDay=round(rDay, 3), rMonth=round(rMonth, 3), rYear=round(rYear, 3))
 
     def adjustBaseTime(self, timezone):
         h = int(timezone)
@@ -44,16 +78,21 @@ class Epocher:
         m = int(60 * (timezone - h))
         delta = timedelta(hours=h, minutes=m)
         dt = datetime.utcnow() + delta
+        print(dt)
         return dt
 
     def worldTimeToEpochSeconds(self, wDt):
         worldSeconds = timegm(wDt.timetuple())
+        # print(worldSeconds)
         epSeconds = (worldSeconds - self.wBaseTime) / self.newSecondRatio
         return round(epSeconds, 0)
 
-    def epochSecondsToWorldTime(self, epSeconds):
+    def epochSecondsToWorldTime(self, epSeconds, timezone):
         worldSeconds = epSeconds*self.newSecondRatio + self.wBaseTime
-        dt = datetime.utcfromtimestamp(worldSeconds)
+        h = int(2 - timezone)
+        m = int(60 * (2 - timezone - h))
+        delta = timedelta(hours=h, minutes=m)
+        dt = datetime.utcfromtimestamp(worldSeconds) - delta
         return dt
 
     def epochSecondsToEpochTime(self, epSeconds):
@@ -93,11 +132,14 @@ class Epocher:
 
     def epNextDobSecondsAndEpNowSeconds(self, timezone, year, month, day, hour, minu, sec=0):
         # calculate epMomentSeconds and epDobSeconds
-        self.adjustBaseTime(timezone)
-        wdtMoment = self.todayWorldTime(timezone)
+        # self.adjustBaseTime(timezone)
+        wdtMoment = self.todayWorldTime(2)
         epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
         epMomentTime = self.epochSecondsToEpochTime(epMomentSeconds)
-        wdtDob = datetime(year, month, day, hour, minu, sec)
+        h = int(timezone)
+        m = int(60 * (timezone - h))
+        delta = timedelta(hours=h, minutes=m)
+        wdtDob = datetime(year, month, day, hour, minu, sec) + delta
         epDobSeconds = self.worldTimeToEpochSeconds(wdtDob)
         # find NEXT epDobSeconds
         epDobTime = self.epochSecondsToEpochTime(epDobSeconds)
@@ -114,21 +156,27 @@ class Epocher:
     #        interface functions
     # **********************************************************
     def getEpochTime(self, timezone):
-        self.adjustBaseTime(timezone)
-        wDt = self.todayWorldTime(timezone)
+        # self.adjustBaseTime(timezone)
+        wDt = self.todayWorldTime(2)
         epSeconds = self.worldTimeToEpochSeconds(wDt)
         return self.epochSecondsToEpochTime(epSeconds)
 
     def getEpochDob(self, timezone, year, month, day, hour, minu, sec=0):
-        self.adjustBaseTime(timezone)
-        wDt = datetime(year, month, day, hour, minu, sec)
+        # self.adjustBaseTime(timezone)
+        # h = int(2 - timezone)
+        # m = int(60 * (2 - timezone - h))
+        # delta = timedelta(hours=h, minutes=m)
+        wDt = datetime(year, month, day, hour, minu, sec) #+ delta
         epSeconds = self.worldTimeToEpochSeconds(wDt)
         return self.epochSecondsToEpochTime(epSeconds)
 
     def getEpochAge(self, timezone, year, month, day, hour, minu, sec=0):
-        self.adjustBaseTime(timezone)
-        wdtMoment = self.todayWorldTime(timezone)
-        wdtDob = datetime(year, month, day, hour, minu, sec)
+        # self.adjustBaseTime(timezone)
+        wdtMoment = self.todayWorldTime(2)
+        h = int(2 - timezone)
+        m = int(60 * (2 - timezone - h))
+        delta = timedelta(hours=h, minutes=m)
+        wdtDob = datetime(year, month, day, hour, minu, sec) + delta
         epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
         epDobSeconds = self.worldTimeToEpochSeconds(wdtDob)
         epAge = epMomentSeconds - epDobSeconds
@@ -140,7 +188,7 @@ class Epocher:
 
     def getEpochNextDobWorldDate(self, timezone, year, month, day, hour, minu, sec=0):
         epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
-        return self.epochSecondsToWorldTime(epDobSeconds)
+        return self.epochSecondsToWorldTime(epDobSeconds, timezone)
 
     def epochDaysToNextDob(self, timezone, year, month, day, hour, minu, sec=0):
         epDobSeconds, epMomentSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)

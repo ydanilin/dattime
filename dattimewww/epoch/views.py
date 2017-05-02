@@ -31,7 +31,6 @@ menuSet = [{'caption': 'Homepage', 'viewName': 'epochTime'},
 
 
 def epochTime(request):
-    # return HttpResponse('HUJ !!')
     footerItems = [menuSet[1], menuSet[2], menuSet[3]]
     epTime = Ep.getEpochTime(0)
     return render(request, 'epoch/screen01.html', {'epTime': epTime,
@@ -88,5 +87,7 @@ def bridge(request):
 
 def calculation(request):
     footerItems = [menuSet[0], menuSet[1], menuSet[2]]
+    toAlt = Ep.getToAltConversionRatios()
+    toWorld = Ep.getToWorldConversionRatios()
     return render(request, 'epoch/calculation.html',
-                  {'footerItems': footerItems})
+                  dict(footerItems=footerItems, toAlt=toAlt, toWorld=toWorld))

@@ -3,5 +3,68 @@
 {% block content %}
 {{ block.super }}
 TIME CONVERSION RATIOS
+
+<table>
+    <tr>
+        <th>World</th>
+        <th>Alternative</th>
+    </tr>
+    <tr>
+        <td> 1 second</td>
+        <td> {{ toAlt.rSec }}</td>
+    </tr>
+    <tr>
+        <td> 1 minute</td>
+        <td> {{ toAlt.rMin }}</td>
+    </tr>
+    <tr>
+        <td> 1 hour</td>
+        <td> {{ toAlt.rHour }}</td>
+    </tr>
+    <tr>
+        <td> 1 day</td>
+        <td> {{ toAlt.rDay }}</td>
+    </tr>
+    <tr>
+        <td> 1 month</td>
+        <td> {{ toAlt.rMonth }}</td>
+    </tr>
+    <tr>
+        <td> 1 year</td>
+        <td> {{ toAlt.rYear }}</td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <th>Alternative</th>
+        <th>World</th>
+    </tr>
+    <tr>
+        <td> 1 second</td>
+        <td> {{ toWorld.rSec }}</td>
+    </tr>
+    <tr>
+        <td> 1 minute</td>
+        <td> {{ toWorld.rMin }}</td>
+    </tr>
+    <tr>
+        <td> 1 hour</td>
+        <td> {{ toWorld.rHour }}</td>
+    </tr>
+    <tr>
+        <td> 1 day</td>
+        <td> {{ toWorld.rDay }}</td>
+    </tr>
+    <tr>
+        <td> 1 month</td>
+        <td> {{ toWorld.rMonth }}</td>
+    </tr>
+    <tr>
+        <td> 1 year</td>
+        <td> {{ toWorld.rYear }}</td>
+    </tr>
+</table>
+
 {% include "footer_menu.html" with items=footerItems %}
 {% endblock %}
