@@ -36,6 +36,7 @@ class Epocher_Test(unittest.TestCase):
     #     self.assertEqual(dtext, '1976-07-14T10:00:00')
 
     def test_worldTimeToEpochSecondsTZ2(self):
+        """timezone NON-aware"""
         self.ep.adjustBaseTime(0)
         # check against base time
         wdt = datetime(1976, 7, 14, 13, 30)
@@ -74,6 +75,7 @@ class Epocher_Test(unittest.TestCase):
     #     self.assertEqual(es, 100000000)
 
     def test_epochSecondsToWorldTime(self):
+        """timezone NON-aware"""
         self.ep.adjustBaseTime(0)
         dt = self.ep.epochSecondsToWorldTime(0, 2)
         self.assertEqual(dt.isoformat(), '1976-07-14T13:30:00')
@@ -85,6 +87,7 @@ class Epocher_Test(unittest.TestCase):
         self.assertEqual(dt.isoformat(), '1979-04-10T13:30:00')
 
     def test_epochSecondsToEpochTime(self):
+        """timezone NON-aware"""
         self.ep.adjustBaseTime(0)
         output = self.ep.epochSecondsToEpochTime(1494500000)
         self.assertEqual(output, {'Year': 14, 'Month': 9, 'Day': 45,
@@ -100,6 +103,7 @@ class Epocher_Test(unittest.TestCase):
                                   'Direction': 'FST'})
 
     def test_epochTimeToEpochSeconds(self):
+        """timezone NON-aware"""
         output = self.ep.epochTimeToEpochSeconds({'Year': -14, 'Month': -9,
                                                   'Day': -45, 'Hour': 0,
                                                   'Minute': 0, 'Second': 0,
@@ -112,6 +116,7 @@ class Epocher_Test(unittest.TestCase):
         self.assertEqual(output, -3100000)
 
     def test_dropYearAndReverseToPositive(self):
+        """timezone NON-aware"""
         self.ep.adjustBaseTime(0)
         # this will be one month before Christ, so add year yelds month +9
         wdt = datetime(1976, 4, 5, 13, 30)
@@ -131,6 +136,7 @@ class Epocher_Test(unittest.TestCase):
                                   'Direction': 'FST'})
 
     def test_epNextDobSecondsAndEpNowSeconds(self):
+        """timezone AWARE"""
         t = self.ep.epNextDobSecondsAndEpNowSeconds(2, 1975, 11, 10, 13, 30)
         wdt = self.ep.epochSecondsToWorldTime(t[0], 2).isoformat(timespec='seconds')
         # my next stupid birthday will be in 2019

@@ -74,14 +74,17 @@ class Epocher:
         self.wBaseTime = timegm(dt.timetuple())
 
     def todayWorldTime(self, timezone):
-        h = int(timezone)
-        m = int(60 * (timezone - h))
-        delta = timedelta(hours=h, minutes=m)
+        """output in UTC+2"""
+        # h = int(2 - timezone)
+        # m = int(60 * (2 - timezone - h))
+        delta = timedelta(hours=2)#, minutes=m)
         dt = datetime.utcnow() + delta
-        print(dt)
+        # print(dt)
         return dt
 
     def worldTimeToEpochSeconds(self, wDt):
+        """input: datetime ADJUSTED
+           output: epoch seconds"""
         worldSeconds = timegm(wDt.timetuple())
         # print(worldSeconds)
         epSeconds = (worldSeconds - self.wBaseTime) / self.newSecondRatio
@@ -89,10 +92,10 @@ class Epocher:
 
     def epochSecondsToWorldTime(self, epSeconds, timezone):
         worldSeconds = epSeconds*self.newSecondRatio + self.wBaseTime
-        h = int(2 - timezone)
-        m = int(60 * (2 - timezone - h))
-        delta = timedelta(hours=h, minutes=m)
-        dt = datetime.utcfromtimestamp(worldSeconds) - delta
+        h = int(timezone - 2)
+        m = int(60 * (timezone - 2 - h))
+        delta = timedelta(hours=2, minutes=m)
+        dt = datetime.utcfromtimestamp(worldSeconds) #+ delta
         return dt
 
     def epochSecondsToEpochTime(self, epSeconds):
@@ -136,10 +139,12 @@ class Epocher:
         wdtMoment = self.todayWorldTime(2)
         epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
         epMomentTime = self.epochSecondsToEpochTime(epMomentSeconds)
-        h = int(timezone)
-        m = int(60 * (timezone - h))
+        # function signature in user timezone. convert to UTC+2
+        h = int(2 - timezone)
+        m = int(60 * (2 - timezone - h))
         delta = timedelta(hours=h, minutes=m)
         wdtDob = datetime(year, month, day, hour, minu, sec) + delta
+
         epDobSeconds = self.worldTimeToEpochSeconds(wdtDob)
         # find NEXT epDobSeconds
         epDobTime = self.epochSecondsToEpochTime(epDobSeconds)
@@ -163,10 +168,10 @@ class Epocher:
 
     def getEpochDob(self, timezone, year, month, day, hour, minu, sec=0):
         # self.adjustBaseTime(timezone)
-        # h = int(2 - timezone)
-        # m = int(60 * (2 - timezone - h))
-        # delta = timedelta(hours=h, minutes=m)
-        wDt = datetime(year, month, day, hour, minu, sec) #+ delta
+        h = int(2 - timezone)
+        m = int(60 * (2 - timezone - h))
+        delta = timedelta(hours=h, minutes=m)
+        wDt = datetime(year, month, day, hour, minu, sec) + delta
         epSeconds = self.worldTimeToEpochSeconds(wDt)
         return self.epochSecondsToEpochTime(epSeconds)
 
@@ -188,7 +193,11 @@ class Epocher:
 
     def getEpochNextDobWorldDate(self, timezone, year, month, day, hour, minu, sec=0):
         epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
-        return self.epochSecondsToWorldTime(epDobSeconds, timezone)
+        dt = self.epochSecondsToWorldTime(epDobSeconds, timezone)
+        h = int(timezone - 2)
+        m = int(60 * (timezone - 2 - h))
+        delta = timedelta(hours=h, minutes=m)
+        return dt + delta
 
     def epochDaysToNextDob(self, timezone, year, month, day, hour, minu, sec=0):
         epDobSeconds, epMomentSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)
