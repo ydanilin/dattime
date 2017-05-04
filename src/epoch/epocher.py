@@ -37,6 +37,13 @@ class Epocher:
         self.wMonth = 30.4167
         self.wYear = 12
 
+    def getSubUnits(self):
+        return dict(minute=self.ratioMinutes,
+                    hour=100,
+                    day=100,
+                    month=100,
+                    year=10)
+
     def getToAltConversionRatios(self):
         rSec =    1 / self.newSecondRatio
         rMin =   (1 * self.wMinute) / \
@@ -91,7 +98,9 @@ class Epocher:
         return round(epSeconds, 0)
 
     def epochSecondsToWorldTime(self, epSeconds, timezone):
-        worldSeconds = epSeconds*self.newSecondRatio + self.wBaseTime
+        print(epSeconds)
+        worldSeconds = int(epSeconds*self.newSecondRatio + self.wBaseTime)
+        print(worldSeconds)
         h = int(timezone - 2)
         m = int(60 * (timezone - 2 - h))
         delta = timedelta(hours=2, minutes=m)
@@ -206,6 +215,20 @@ class Epocher:
 
     def getEpochEventDate(self, timezone, year, month, day, hour, minu, sec=0):
         return self.getEpochDob(timezone, year, month, day, hour, minu, sec)
+
+    def getWorldEventDate(self, timezone, year, month, day, hour, minu, sec=0):
+        epSeconds = self.epochTimeToEpochSeconds(dict(Second=sec,
+                                                      Minute=minu,
+                                                      Hour=hour,
+                                                      Day=day,
+                                                      Month=month,
+                                                      Year=year))
+        dt = self.epochSecondsToWorldTime(epSeconds, timezone)
+        h = int(timezone - 2)
+        m = int(60 * (timezone - 2 - h))
+        delta = timedelta(hours=h, minutes=m)
+        return (dt + delta).isoformat()
+
 
 if __name__ == '__main__':
     ep = Epocher()

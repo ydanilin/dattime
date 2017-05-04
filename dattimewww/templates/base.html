@@ -1,18 +1,19 @@
 {% load staticfiles %}
 <html>
+{% block meta %}
 <head>
     <title>{% block title %}Alternative time{% endblock %}</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 </head>
-<body>
+{% endblock %}
 
 {% block content %}
+<body>
 <div>
     Welcome to alternative calendar!<br>
     The new era of alternative reality.
 </div>
-{% endblock %}
-
 </body>
+{% endblock %}
 
 </html>

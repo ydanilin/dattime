@@ -1,12 +1,63 @@
 {% extends "base.html" %}
+{% block meta %}
+{{ block.super }}
+<style>
+    span {
+     font-weight: bold;
+    }
+
+</style>
+{% endblock %}
 
 {% block content %}
 {{ block.super }}
 <div>Today is:</div>
 <div>
-    Year: <b>{{ epTime.Year }}</b> Month: <b>{{ epTime.Month }}</b> Day: <b>{{ epTime.Day }}</b>
-    Hour: <b>{{ epTime.Hour }}</b> Minute: <b>{{ epTime.Minute }}</b> Second: <b>{{ epTime.Second }}</b>
+    Year: <span id="year">{{ epTime.Year }}</span>
+    Month: <span id="month">{{ epTime.Month }}</span>
+    Day: <span id="day"> {{ epTime.Day }}</span>
+    Hour: <span id="hour">{{ epTime.Hour }}</span>
+    Minute: <span id="minute">{{ epTime.Minute }}</span>
+    Second: <span id="second">{{ epTime.Second }}</span>
 </div>
 {% include "footer_menu.html" with items=footerItems %}
+<script type="text/javascript">
+
+    window.onload=function(){
+        // parseInt("97,800", radix);
+        second = Number($("#second").text());
+        minute = Number($("#minute").text());
+        hour = Number($("#hour").text());
+        day = Number($("#day").text());
+        month = Number($("#month").text());
+        year = Number($("#year").text());
+        setInterval(GetClock, 864);
+    }
+
+    function GetClock(){
+        second += 1;
+        if (second > 9) {
+            second = 0;
+            minute += 1
+            if (minute > 99) {
+                minute = 0
+                hour += 1
+                if (hour > 99) {
+                    hour = 0
+                    day += 1
+                    if (day > 100) {
+                        day = 1
+                        month += 1
+                        if (month > 10) {
+                            month = 1
+                            year += 1
+                            $("#year").text(year)}
+                        $("#month").text(month)}
+                    $("#day").text(day)}
+                $("#hour").text(hour)}
+            $("#minute").text(minute)}
+        $("#second").text(second)
+    }
+</script>
 {% endblock %}
 

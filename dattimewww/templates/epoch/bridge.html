@@ -4,16 +4,28 @@
 {% block content %}
 {{ block.super }}
 UPCOMING EVENT ALTERNATIVE DATE
+<div><b>From world to alternative calendar:</b></div>
 <form method="post" id="altdate" action="{% url 'bridge' %}">
-{% csrf_token %}
-<!-- This line inserts a CSRF token. -->
-<table>
-{{ form.as_table }}
-<!-- This line displays lines of the form.-->
-</table>
-<p><input type="submit" value="Calculate" /></p>
+    {% csrf_token %}
+    <!-- This line inserts a CSRF token. -->
+    <table>
+        {{ formW.as_table }}
+    </table>
+    <p><input type="submit" value="Calculate"/></p>
 </form>
 <div id="next_date"></div>
+
+<form method="post" id="worlddate" action="{% url 'bridge' %}">
+    {% csrf_token %}
+    <!-- This line inserts a CSRF token. -->
+    <table>
+        {{ formA.as_table }}
+    </table>
+    <p><input type="submit" value="Calculate"/></p>
+</form>
+<div id="wnext_date"></div>
+
+
 {% include "footer_menu.html" with items=footerItems %}
 <script src="{% static 'main.js' %}" type="text/javascript"></script>
 {% endblock %}

@@ -4,25 +4,50 @@ from django.http import HttpResponse
 from django import forms
 from .models import Epocher
 
-
 Ep = Epocher()
 
+tzChoices = [(-12, 'GMT-12'), (-11, 'GMT-11'), (-10, 'GMT-10'),
+             (-9, 'GMT-9'), (-8, 'GMT-8'), (-7, 'GMT-7'),
+             (-6, 'GMT-6'), (-5, 'GMT-5'), (-4, 'GMT-4'),
+             (-3, 'GMT-3'), (-2, 'GMT-2'), (-1, 'GMT-1'),
+             (0, 'GMT'),
+             (1, 'GMT+1'), (2, 'GMT+2'), (3, 'GMT+3'),
+             (4, 'GMT+4'), (5, 'GMT+5'), (5.5, 'GMT+5:30'),
+             (6, 'GMT+6'), (6.5, 'GMT+6:30'),
+             (7, 'GMT+7'), (8, 'GMT+8'),
+             (9, 'GMT+9'), (9.5, 'GMT+9:30'),
+             (10, 'GMT+10'), (11, 'GMT+11'), (12, 'GMT+12')]
+
+monthChoices = [(1, 'Jan'), (2, 'Feb'), (3, 'Mar'), (4, 'Apr'),
+                (5, 'May'), (6, 'Jun'), (7, 'Jul'), (8, 'Aug'),
+                (9, 'Sep'), (10, 'Oct'), (11, 'Nov'), (12, 'Dec')]
+
+
 # http://stackoverflow.com/questions/32084837/changing-id-of-form-input-element-in-django-when-its-created
-class Form_inscription(forms.Form):
-    timezone = forms.ChoiceField(label="Time zone", choices=[(0, 'GMT'),
-                                                             (1, 'GMT+1'),
-                                                             (2, 'GMT+2')
-                                                             ])
+class formWorldToAlt(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(formWorldToAlt, self).__init__(*args, **kwargs)
+        self.initial['timezone'] = 2
+
+    timezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
     day = forms.IntegerField(label="Day", min_value=1, max_value=31)
-    month = forms.ChoiceField(label='Month', choices=[(1, 'Jan'), (2, 'Feb'),
-                                                      (3, 'Mar'), (4, 'Apr'),
-                                                      (5, 'May'), (6, 'Jun'),
-                                                      (7, 'Jul'), (8, 'Aug'),
-                                                      (9, 'Sep'), (10, 'Oct'),
-                                                      (11, 'Nov'), (12, 'Dec')])
+    month = forms.ChoiceField(label='Month', choices=monthChoices)
     year = forms.IntegerField(label="Year")
     hour = forms.IntegerField(label="Hour", min_value=0, max_value=23)
     minute = forms.IntegerField(label="Minute", min_value=0, max_value=59)
+
+
+class formAltToWorld(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(formAltToWorld, self).__init__(*args, **kwargs)
+        self.initial['timezone'] = 2
+
+    timezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
+    year = forms.IntegerField(label="Year")
+    month = forms.IntegerField(label='Month', min_value=1, max_value=10)
+    day = forms.IntegerField(label="Day", min_value=1, max_value=100)
+    hour = forms.IntegerField(label="Hour", min_value=0, max_value=99)
+    minute = forms.IntegerField(label="Minute", min_value=0, max_value=99)
 
 menuSet = [{'caption': 'Homepage', 'viewName': 'epochTime'},
            {'caption': 'My Birthday in the New Epoch', 'viewName': 'birthday'},
@@ -40,18 +65,22 @@ def epochTime(request):
 def birthday(request):
     footerItems = [menuSet[0], menuSet[2], menuSet[3]]
     if request.POST:
-        timezone = int(request.POST.get('timezone'))
+        timezone = float(request.POST.get('timezone'))
+        print(timezone)
         day = int(request.POST.get('day'))
         month = int(request.POST.get('month'))
         year = int(request.POST.get('year'))
         hour = int(request.POST.get('hour'))
         minute = int(request.POST.get('minute'))
 
-        output = dict(epDob=Ep.getEpochDob(timezone, year, month, day, hour, minute),
-                      epAge=Ep.getEpochAge(timezone, year, month, day, hour, minute),
-                      epNextDob=Ep.getEpochNextDobDate(timezone, year, month, day, hour, minute),
-                      wNextDob=Ep.getEpochNextDobWorldDate(timezone, year, month, day, hour, minute).isoformat()
-                      )
+        output = dict(
+            epDob=Ep.getEpochDob(timezone, year, month, day, hour, minute),
+            epAge=Ep.getEpochAge(timezone, year, month, day, hour, minute),
+            epNextDob=Ep.getEpochNextDobDate(timezone, year, month, day, hour,
+                                             minute),
+            wNextDob=Ep.getEpochNextDobWorldDate(timezone, year, month, day,
+                                                 hour, minute).isoformat()
+        )
 
         return HttpResponse(
             json.dumps(output),
@@ -59,7 +88,7 @@ def birthday(request):
         )
     else:
         # this is on page load
-        form = Form_inscription()
+        form = formWorldToAlt()
         return render(request, 'epoch/birthday.html',
                       {'footerItems': footerItems, 'form': form})
 
@@ -74,20 +103,31 @@ def bridge(request):
         year = int(request.POST.get('year'))
         hour = int(request.POST.get('hour'))
         minute = int(request.POST.get('minute'))
-        output = Ep.getEpochEventDate(timezone, year, month, day, hour, minute)
+        sender = request.POST.get('senderr')
+        print(sender)
+        if sender == 'world':
+            output = Ep.getEpochEventDate(timezone, year, month, day, hour, minute)
+        if sender == 'alt':
+            output = dict(wtime=Ep.getWorldEventDate(timezone, year, month, day, hour, minute))
         return HttpResponse(
             json.dumps(output),
             content_type="application/json"
         )
     else:
-        form = Form_inscription()
+        formW = formWorldToAlt()
+        formA = formAltToWorld()
         return render(request, 'epoch/bridge.html',
-                      {'footerItems': footerItems, 'form': form})
+                      dict(footerItems=footerItems, formW=formW, formA=formA))
 
 
 def calculation(request):
     footerItems = [menuSet[0], menuSet[1], menuSet[2]]
     toAlt = Ep.getToAltConversionRatios()
     toWorld = Ep.getToWorldConversionRatios()
+    units = Ep.getSubUnits()
     return render(request, 'epoch/calculation.html',
-                  dict(footerItems=footerItems, toAlt=toAlt, toWorld=toWorld))
+                  dict(footerItems=footerItems,
+                       toAlt=toAlt,
+                       toWorld=toWorld,
+                       units=units)
+                  )

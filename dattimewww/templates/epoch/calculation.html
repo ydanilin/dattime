@@ -2,7 +2,7 @@
 
 {% block content %}
 {{ block.super }}
-TIME CONVERSION RATIOS
+<div>TIME CONVERSION RATIOS</div>
 
 <table>
     <tr>
@@ -64,6 +64,31 @@ TIME CONVERSION RATIOS
         <td> 1 year</td>
         <td> {{ toWorld.rYear }}</td>
     </tr>
+</table>
+
+<div><b>Alternative calendar how many subunits in unit:</b></div>
+<table>
+    <tr>
+        <td>1 minute is </td>
+        <td>{{ units.minute }} seconds</td>
+    </tr>
+    <tr>
+        <td>1 hour is </td>
+        <td>{{ units.hour }} minutes</td>
+    </tr>
+        <tr>
+        <td>1 day is </td>
+        <td>{{ units.day }} hours</td>
+    </tr>
+    <tr>
+        <td>1 month is </td>
+        <td>{{ units.month }} days</td>
+    </tr>
+    <tr>
+        <td>1 year is </td>
+        <td>{{ units.year }} months</td>
+    </tr>
+
 </table>
 
 {% include "footer_menu.html" with items=footerItems %}

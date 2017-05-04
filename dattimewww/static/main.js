@@ -4,20 +4,22 @@
 // Submit post on submit
 $('#whenborn').on('submit', function(event){
     event.preventDefault();
-    //console.log("form submitted!")  // sanity check
     create_post();
 });
 
-// Submit post on submit
 $('#altdate').on('submit', function(event){
     event.preventDefault();
-    //console.log("form submitted!")  // sanity check
     next_date();
 });
 
+$('#worlddate').on('submit', function(event){
+    event.preventDefault();
+    world_date();
+});
+
+
 // AJAX for posting
 function create_post() {
-    //console.log("create post is working!") // sanity check
     $.ajax({
         url : "", // the endpoint (was create_post/)
         type : "POST", // http method
@@ -34,8 +36,6 @@ function create_post() {
             dob = json.epDob
             age = json.epAge
             ndob = json.epNextDob
-            //$('#id_day').val(''); // remove the value from the input
-            //console.log(json); // log the returned json to the console
             $("#epoch_dob").empty()
             $("#epoch_dob").prepend(
                 "<b>Your alternative date of birth: </b>" +
@@ -73,8 +73,6 @@ function create_post() {
                 "<b>... and in world calendar: </b>" +
                 json.wNextDob
               )
-
-            //console.log("success"); // another sanity check
         },
 
         // handle a non-successful response
@@ -89,7 +87,6 @@ function create_post() {
 
 // AJAX for posting
 function next_date() {
-    //console.log("create post is working!") // sanity check
     $.ajax({
         url : "", // the endpoint (was create_post/)
         type : "POST", // http method
@@ -99,6 +96,7 @@ function next_date() {
                  year : $('#id_year').val(),
                  hour : $('#id_hour').val(),
                  minute : $('#id_minute').val(),
+                 senderr : 'world'
                }, // data sent with the post request
 
         // handle a successful response
@@ -114,7 +112,36 @@ function next_date() {
                 ", Epoch " + json.Direction
                 )
 
-            console.log("json"); // another sanity check
+            //console.log("json"); // another sanity check
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+};
+
+function world_date() {
+    $.ajax({
+        url : "", // the endpoint (was create_post/)
+        type : "POST", // http method
+        data : { timezone : $('#id_timezone').val(),
+                 day : $('#id_day').val(),
+                 month : $('#id_month').val(),
+                 year : $('#id_year').val(),
+                 hour : $('#id_hour').val(),
+                 minute : $('#id_minute').val(),
+                 senderr : "alt"
+               }, // data sent with the post request
+
+        // handle a successful response
+        success : function(json) {
+            $("#wnext_date").empty();
+            $("#wnext_date").prepend( "<b>Upcoming event world date: </b>" +
+                                     json.wtime );
         },
 
         // handle a non-successful response
