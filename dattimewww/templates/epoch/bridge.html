@@ -3,7 +3,7 @@
 
 {% block content %}
 {{ block.super }}
-UPCOMING EVENT ALTERNATIVE DATE
+<div>UPCOMING EVENT ALTERNATIVE DATE</div>
 <div><b>From world to alternative calendar:</b></div>
 <form method="post" id="altdate" action="{% url 'bridge' %}">
     {% csrf_token %}
@@ -15,6 +15,7 @@ UPCOMING EVENT ALTERNATIVE DATE
 </form>
 <div id="next_date"></div>
 
+<div><b>From alternative to world:</b></div>
 <form method="post" id="worlddate" action="{% url 'bridge' %}">
     {% csrf_token %}
     <!-- This line inserts a CSRF token. -->

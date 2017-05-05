@@ -40,14 +40,14 @@ class formWorldToAlt(forms.Form):
 class formAltToWorld(forms.Form):
     def __init__(self, *args, **kwargs):
         super(formAltToWorld, self).__init__(*args, **kwargs)
-        self.initial['timezone'] = 2
+        self.initial['wtimezone'] = 2
 
-    timezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
-    year = forms.IntegerField(label="Year")
-    month = forms.IntegerField(label='Month', min_value=1, max_value=10)
-    day = forms.IntegerField(label="Day", min_value=1, max_value=100)
-    hour = forms.IntegerField(label="Hour", min_value=0, max_value=99)
-    minute = forms.IntegerField(label="Minute", min_value=0, max_value=99)
+    wtimezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
+    wyear = forms.IntegerField(label="Year")
+    wmonth = forms.IntegerField(label='Month', min_value=1, max_value=10)
+    wday = forms.IntegerField(label="Day", min_value=1, max_value=100)
+    whour = forms.IntegerField(label="Hour", min_value=0, max_value=99)
+    wminute = forms.IntegerField(label="Minute", min_value=0, max_value=99)
 
 menuSet = [{'caption': 'Homepage', 'viewName': 'epochTime'},
            {'caption': 'My Birthday in the New Epoch', 'viewName': 'birthday'},
@@ -104,7 +104,6 @@ def bridge(request):
         hour = int(request.POST.get('hour'))
         minute = int(request.POST.get('minute'))
         sender = request.POST.get('senderr')
-        print(sender)
         if sender == 'world':
             output = Ep.getEpochEventDate(timezone, year, month, day, hour, minute)
         if sender == 'alt':

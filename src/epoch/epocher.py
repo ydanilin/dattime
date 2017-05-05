@@ -98,9 +98,7 @@ class Epocher:
         return round(epSeconds, 0)
 
     def epochSecondsToWorldTime(self, epSeconds, timezone):
-        print(epSeconds)
         worldSeconds = int(epSeconds*self.newSecondRatio + self.wBaseTime)
-        print(worldSeconds)
         h = int(timezone - 2)
         m = int(60 * (timezone - 2 - h))
         delta = timedelta(hours=2, minutes=m)

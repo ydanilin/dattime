@@ -2,7 +2,7 @@
 {% load staticfiles %}
 {% block content %}
 {{ block.super }}
-BIRTHDAY
+<div>BIRTHDAY</div>
 <form method="post" id="whenborn" action="{% url 'birthday' %}">
 {% csrf_token %}
 <!-- This line inserts a CSRF token. -->

@@ -111,8 +111,6 @@ function next_date() {
                 ", Minute " + Math.abs(json.Minute) +
                 ", Epoch " + json.Direction
                 )
-
-            //console.log("json"); // another sanity check
         },
 
         // handle a non-successful response
@@ -128,12 +126,12 @@ function world_date() {
     $.ajax({
         url : "", // the endpoint (was create_post/)
         type : "POST", // http method
-        data : { timezone : $('#id_timezone').val(),
-                 day : $('#id_day').val(),
-                 month : $('#id_month').val(),
-                 year : $('#id_year').val(),
-                 hour : $('#id_hour').val(),
-                 minute : $('#id_minute').val(),
+        data : { timezone : $('#id_wtimezone').val(),
+                 day : $('#id_wday').val(),
+                 month : $('#id_wmonth').val(),
+                 year : $('#id_wyear').val(),
+                 hour : $('#id_whour').val(),
+                 minute : $('#id_wminute').val(),
                  senderr : "alt"
                }, // data sent with the post request
 
