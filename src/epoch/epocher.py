@@ -99,10 +99,10 @@ class Epocher:
 
     def epochSecondsToWorldTime(self, epSeconds, timezone):
         worldSeconds = int(epSeconds*self.newSecondRatio + self.wBaseTime)
-        h = int(timezone - 2)
-        m = int(60 * (timezone - 2 - h))
-        delta = timedelta(hours=2, minutes=m)
-        dt = datetime.utcfromtimestamp(worldSeconds) #+ delta
+        if worldSeconds < 0:
+            dt = datetime(1970, 1, 1) + timedelta(seconds=worldSeconds)
+        else:
+            dt = datetime.utcfromtimestamp(worldSeconds)
         return dt
 
     def epochSecondsToEpochTime(self, epSeconds):
@@ -198,6 +198,13 @@ class Epocher:
         epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
         return self.epochSecondsToEpochTime(epDobSeconds)
 
+    def getEpochTimeUntilNextDob(self, timezone, year, month, day, hour, minu, sec=0):
+        epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
+        wdtMoment = self.todayWorldTime(2)
+        epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
+        epUntil = epDobSeconds - epMomentSeconds
+        return self.epochSecondsToEpochTime(epUntil)
+
     def getEpochNextDobWorldDate(self, timezone, year, month, day, hour, minu, sec=0):
         epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
         dt = self.epochSecondsToWorldTime(epDobSeconds, timezone)
@@ -214,13 +221,14 @@ class Epocher:
     def getEpochEventDate(self, timezone, year, month, day, hour, minu, sec=0):
         return self.getEpochDob(timezone, year, month, day, hour, minu, sec)
 
-    def getWorldEventDate(self, timezone, year, month, day, hour, minu, sec=0):
-        epSeconds = self.epochTimeToEpochSeconds(dict(Second=sec,
-                                                      Minute=minu,
-                                                      Hour=hour,
-                                                      Day=day,
-                                                      Month=month,
-                                                      Year=year))
+    def getWorldEventDate(self, timezone, year, month, day, hour, minu,
+                          direction):
+        epSeconds = self.epochTimeToEpochSeconds(dict(Second=0 * direction,
+                                                      Minute=minu * direction,
+                                                      Hour=hour * direction,
+                                                      Day=day * direction,
+                                                      Month=month * direction,
+                                                      Year=year * direction))
         dt = self.epochSecondsToWorldTime(epSeconds, timezone)
         h = int(timezone - 2)
         m = int(60 * (timezone - 2 - h))

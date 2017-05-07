@@ -12,7 +12,7 @@ tzChoices = [(-12, 'GMT-12'), (-11, 'GMT-11'), (-10, 'GMT-10'),
              (-3, 'GMT-3'), (-2, 'GMT-2'), (-1, 'GMT-1'),
              (0, 'GMT'),
              (1, 'GMT+1'), (2, 'GMT+2'), (3, 'GMT+3'),
-             (4, 'GMT+4'), (5, 'GMT+5'), (5.5, 'GMT+5:30'),
+             (4, 'GMT+4'), (5, 'GMT+5'), (5.5, 'GMT+5:30'), (5.75, 'GMT+5:45'),
              (6, 'GMT+6'), (6.5, 'GMT+6:30'),
              (7, 'GMT+7'), (8, 'GMT+8'),
              (9, 'GMT+9'), (9.5, 'GMT+9:30'),
@@ -41,13 +41,16 @@ class formAltToWorld(forms.Form):
     def __init__(self, *args, **kwargs):
         super(formAltToWorld, self).__init__(*args, **kwargs)
         self.initial['wtimezone'] = 2
+        self.initial['wdirection'] = 1
 
     wtimezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
     wyear = forms.IntegerField(label="Year")
-    wmonth = forms.IntegerField(label='Month', min_value=1, max_value=10)
-    wday = forms.IntegerField(label="Day", min_value=1, max_value=100)
+    wmonth = forms.IntegerField(label='Month', min_value=0, max_value=9)
+    wday = forms.IntegerField(label="Day", min_value=0, max_value=99)
     whour = forms.IntegerField(label="Hour", min_value=0, max_value=99)
     wminute = forms.IntegerField(label="Minute", min_value=0, max_value=99)
+    wdirection = forms.ChoiceField(label='Direction', choices=[(-1, 'BST'),
+                                                               (1, 'FST')])
 
 menuSet = [{'caption': 'Homepage', 'viewName': 'epochTime'},
            {'caption': 'My Birthday in the New Epoch', 'viewName': 'birthday'},
@@ -76,6 +79,7 @@ def birthday(request):
         output = dict(
             epDob=Ep.getEpochDob(timezone, year, month, day, hour, minute),
             epAge=Ep.getEpochAge(timezone, year, month, day, hour, minute),
+            epUntil=Ep.getEpochTimeUntilNextDob(timezone, year, month, day, hour, minute),
             epNextDob=Ep.getEpochNextDobDate(timezone, year, month, day, hour,
                                              minute),
             wNextDob=Ep.getEpochNextDobWorldDate(timezone, year, month, day,
@@ -97,7 +101,7 @@ def bridge(request):
     footerItems = [menuSet[0], menuSet[1], menuSet[3]]
 
     if request.POST:
-        timezone = int(request.POST.get('timezone'))
+        timezone = float(request.POST.get('timezone'))
         day = int(request.POST.get('day'))
         month = int(request.POST.get('month'))
         year = int(request.POST.get('year'))
@@ -107,7 +111,10 @@ def bridge(request):
         if sender == 'world':
             output = Ep.getEpochEventDate(timezone, year, month, day, hour, minute)
         if sender == 'alt':
-            output = dict(wtime=Ep.getWorldEventDate(timezone, year, month, day, hour, minute))
+            direction = int(request.POST.get('direction'))
+            print(direction)
+            output = dict(wtime=Ep.getWorldEventDate(timezone, year, month, day,
+                                                     hour, minute, direction))
         return HttpResponse(
             json.dumps(output),
             content_type="application/json"

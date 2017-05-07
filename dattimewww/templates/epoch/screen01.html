@@ -40,11 +40,11 @@
                 if (hour > 99) {
                     hour = 0
                     day += 1
-                    if (day > 100) {
-                        day = 1
+                    if (day > 99) {
+                        day = 0
                         month += 1
-                        if (month > 10) {
-                            month = 1
+                        if (month > 9) {
+                            month = 0
                             year += 1
                             $("#year").text(year)}
                         $("#month").text(month)}

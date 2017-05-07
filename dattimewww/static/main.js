@@ -35,6 +35,7 @@ function create_post() {
         success : function(json) {
             dob = json.epDob
             age = json.epAge
+            untill = json.epUntil
             ndob = json.epNextDob
             $("#epoch_dob").empty()
             $("#epoch_dob").prepend(
@@ -50,11 +51,21 @@ function create_post() {
             $("#epoch_age").empty()
             $("#epoch_age").prepend(
                 "<b>Your alternative age: </b>" +
-                "Year " + Math.abs(age.Year) +
-                ", Month " + Math.abs(age.Month) +
-                ", Day " + Math.abs(age.Day) +
-                ", Hour " + Math.abs(age.Hour) +
-                ", Minute " + Math.abs(age.Minute)
+                "Years " + Math.abs(age.Year) +
+                ", Months " + Math.abs(age.Month) +
+                ", Days " + Math.abs(age.Day) +
+                ", Hours " + Math.abs(age.Hour) +
+                ", Minutes " + Math.abs(age.Minute)
+                )
+
+            $("#epoch_until").empty()
+            $("#epoch_until").prepend(
+                "<b>Alternative time until next birthday: </b>" +
+                "Years " + Math.abs(untill.Year) +
+                ", Months " + Math.abs(untill.Month) +
+                ", Days " + Math.abs(untill.Day) +
+                ", Hours " + Math.abs(untill.Hour) +
+                ", Minutes " + Math.abs(untill.Minute)
                 )
 
             $("#epoch_nextdob").empty()
@@ -132,6 +143,7 @@ function world_date() {
                  year : $('#id_wyear').val(),
                  hour : $('#id_whour').val(),
                  minute : $('#id_wminute').val(),
+                 direction : $('#id_wdirection').val(),
                  senderr : "alt"
                }, // data sent with the post request
 
