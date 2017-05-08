@@ -1,0 +1,19 @@
+1. Fucking import
+- change the contents of epocher.py IN dattime/epocher dir to actual
+- in models.py change to from .epocher import Epocher
+
+2. Static
+- in config/settings.py add:
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+
+3. collect
+- go to ~/dattime/dattimewww
+- run source myvenv/bin/activate
+- go to cd dattimewww
+- run python manage.py collectstatic
+
+4. Fucking allowed hosts
+- add ALLOWED_HOSTS = ['ydanilin.pythonanywhere.com'] to settings.py
+
+reload the server

@@ -58,6 +58,22 @@ menuSet = [{'caption': 'Homepage', 'viewName': 'epochTime'},
            {'caption': 'The New Time', 'viewName': 'calculation'}]
 
 
+# https://siongui.github.io/2012/10/11/python-parse-accept-language-in-http-request-header/#id5
+# https://siongui.github.io/2012/10/12/detect-user-language-locale-gae-python/
+def parseAcceptLanguage(acceptLanguage):
+    languages = acceptLanguage.split(",")
+    locale_q_pairs = []
+    for language in languages:
+        if language.split(";")[0] == language:
+            # no q => q = 1
+            locale_q_pairs.append((language.strip(), "1"))
+        else:
+            locale = language.split(";")[0].strip()
+            q = language.split(";")[1].split("=")[1]
+            locale_q_pairs.append((locale, q))
+    return locale_q_pairs
+
+
 def epochTime(request):
     footerItems = [menuSet[1], menuSet[2], menuSet[3]]
     epTime = Ep.getEpochTime(0)
@@ -99,7 +115,6 @@ def birthday(request):
 
 def bridge(request):
     footerItems = [menuSet[0], menuSet[1], menuSet[3]]
-
     if request.POST:
         timezone = float(request.POST.get('timezone'))
         day = int(request.POST.get('day'))
@@ -108,11 +123,11 @@ def bridge(request):
         hour = int(request.POST.get('hour'))
         minute = int(request.POST.get('minute'))
         sender = request.POST.get('senderr')
+        output = {}
         if sender == 'world':
             output = Ep.getEpochEventDate(timezone, year, month, day, hour, minute)
         if sender == 'alt':
             direction = int(request.POST.get('direction'))
-            print(direction)
             output = dict(wtime=Ep.getWorldEventDate(timezone, year, month, day,
                                                      hour, minute, direction))
         return HttpResponse(
@@ -120,6 +135,7 @@ def bridge(request):
             content_type="application/json"
         )
     else:
+
         formW = formWorldToAlt()
         formA = formAltToWorld()
         return render(request, 'epoch/bridge.html',
