@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from django.shortcuts import render
 from django.http import HttpResponse
 from django import forms
@@ -75,37 +76,35 @@ def parseAcceptLanguage(acceptLanguage):
 
 
 def epochTime(request):
+    if not request.session.session_key:
+        request.session.create()
+    print(request.session.session_key)
+
     footerItems = [menuSet[1], menuSet[2], menuSet[3]]
-    epTime = Ep.getEpochTime(0)
+    dt = datetime.utcnow()
+    epTime = Ep.getSpaceMoment(dt)
     return render(request, 'epoch/screen01.html', {'epTime': epTime,
                                                    'footerItems': footerItems})
 
 
 def birthday(request):
+    dt = datetime.utcnow()
     footerItems = [menuSet[0], menuSet[2], menuSet[3]]
     if request.POST:
         timezone = float(request.POST.get('timezone'))
-        print(timezone)
         day = int(request.POST.get('day'))
         month = int(request.POST.get('month'))
         year = int(request.POST.get('year'))
         hour = int(request.POST.get('hour'))
         minute = int(request.POST.get('minute'))
 
-        output = dict(
-            epDob=Ep.getEpochDob(timezone, year, month, day, hour, minute),
-            epAge=Ep.getEpochAge(timezone, year, month, day, hour, minute),
-            epUntil=Ep.getEpochTimeUntilNextDob(timezone, year, month, day, hour, minute),
-            epNextDob=Ep.getEpochNextDobDate(timezone, year, month, day, hour,
-                                             minute),
-            wNextDob=Ep.getEpochNextDobWorldDate(timezone, year, month, day,
-                                                 hour, minute).isoformat()
-        )
+        event = Ep.getAnnualEventDetails(timezone, dt, year, month, day, hour, minute)
 
+        output = dict(epDob=event[0], epAge=event[1], epUntil=event[2],
+                      epNextDob=event[3], wNextDob=event[4].isoformat())
         return HttpResponse(
             json.dumps(output),
-            content_type="application/json"
-        )
+            content_type="application/json")
     else:
         # this is on page load
         form = formWorldToAlt()
@@ -125,11 +124,11 @@ def bridge(request):
         sender = request.POST.get('senderr')
         output = {}
         if sender == 'world':
-            output = Ep.getEpochEventDate(timezone, year, month, day, hour, minute)
+            output = Ep.getEventSpaceDate(timezone, year, month, day, hour, minute)
         if sender == 'alt':
             direction = int(request.POST.get('direction'))
-            output = dict(wtime=Ep.getWorldEventDate(timezone, year, month, day,
-                                                     hour, minute, direction))
+            output = dict(wtime=Ep.getEventUserDate(timezone, year, month, day,
+                                                    hour, minute, direction))
         return HttpResponse(
             json.dumps(output),
             content_type="application/json"

@@ -5,12 +5,6 @@ from calendar import timegm
 
 class Epocher:
     """
-    domain dictionary:
-    base: all variables prefixed with "base" are the start of our
-          new Sfirat ha-Nocrim
-    ep:   prefix "ep" means our New Epoch
-    w:    prefix "w" means world regular time counting
-    time: all variables containing "time" always expressed in seconds
     """
     def __init__(self):
         # print('Epocher instantiated')
@@ -19,6 +13,7 @@ class Epocher:
         self.baseDay = 14
         self.baseHour = 13  # in UTC+3
         self.baseMinute = 30
+        self.baseShift = 3  # UTC+3
         dt = datetime(self.baseYear,
                       self.baseMonth,
                       self.baseDay,
@@ -69,46 +64,129 @@ class Epocher:
         return dict(rSec=round(rSec, 3), rMin=round(rMin, 3), rHour=round(rHour, 3),
                     rDay=round(rDay, 3), rMonth=round(rMonth, 3), rYear=round(rYear, 3))
 
-    def adjustBaseTime(self, timezone):
-        h = int(timezone)
-        m = int(60*(timezone - h))
+    # **********************************************************
+    #        interface functions
+    # **********************************************************
+    # cleaned
+    def getSpaceMoment(self, dt):
+        # dt = datetime.utcnow()
+        spaceSeconds = self.userDateToSpaceSeconds(0, dt)
+        spaceDate = self.spaceSecondsToDate(spaceSeconds)
+        return spaceDate
+
+    def getEventSpaceDate(self, shift, year, month, day, hour, minu, sec=0):
+        uDt = datetime(year, month, day, hour, minu, sec)
+        spaceSeconds = self.userDateToSpaceSeconds(shift, uDt)
+        spaceDate = self.spaceSecondsToDate(spaceSeconds)
+        return spaceDate
+
+    def getEventUserDate(self, userShift, year, month, day, hour, minu,
+                         direction):
+        spDate = dict(Second=0, Minute=minu, Hour=hour,
+                      Day=day, Month=month, Year=year,
+                      Direction=direction)
+        spSeconds = self.spaceDateToSeconds(spDate)
+        uDt = self.spaceSecondsToUserDate(userShift, spSeconds)
+        return uDt.isoformat()
+
+    def getAnnualEventDetails(self, shift, dt, year, month, day, hour, minu, sec=0):
+        eventSpaceDate = self.getEventSpaceDate(shift, year, month, day, hour, minu, sec)
+        momentSpaceDate = self.getSpaceMoment(dt)
+        nextEventDate = self.annualEventNext(eventSpaceDate, momentSpaceDate)
+        age = self.spaceTimeDelta(momentSpaceDate, eventSpaceDate)
+        daysRemain = self.spaceTimeDelta(nextEventDate, momentSpaceDate)
+        nes = self.spaceDateToSeconds(nextEventDate)
+        nextEventUserDate = self.spaceSecondsToUserDate(shift, nes)
+        return eventSpaceDate, age, daysRemain, nextEventDate, nextEventUserDate
+
+    # refactored
+    # forward conversion functions
+    def shiftToAretzDate(self, userShift, uDt):
+        """input, output = python datetime"""
+        h = int(self.baseShift - userShift)
+        m = int(60 * (self.baseShift - userShift - h))
         delta = timedelta(hours=h, minutes=m)
-        dt = datetime(self.baseYear,
-                      self.baseMonth,
-                      self.baseDay,
-                      self.baseHour,
-                      self.baseMinute) + delta
-        self.wBaseTime = timegm(dt.timetuple())
+        return uDt + delta
 
-    def todayWorldTime(self, timezone):
-        """output in UTC+2"""
-        # h = int(2 - timezone)
-        # m = int(60 * (2 - timezone - h))
-        delta = timedelta(hours=2)#, minutes=m)
-        dt = datetime.utcnow() + delta
-        # print(dt)
-        return dt
+    def aretzDateToSeconds(self, aDt):
+        return timegm(aDt.timetuple())
 
-    def worldTimeToEpochSeconds(self, wDt):
-        """input: datetime ADJUSTED
-           output: epoch seconds"""
-        worldSeconds = timegm(wDt.timetuple())
-        # print(worldSeconds)
-        epSeconds = (worldSeconds - self.wBaseTime) / self.newSecondRatio
-        return round(epSeconds, 0)
+    def aretzSecondsToSpaceSeconds(self, aSeconds):
+        spaceSeconds = (aSeconds - self.wBaseTime) / self.newSecondRatio
+        return round(spaceSeconds, 0)
 
-    def epochSecondsToWorldTime(self, epSeconds, timezone):
-        worldSeconds = int(epSeconds*self.newSecondRatio + self.wBaseTime)
-        if worldSeconds < 0:
-            dt = datetime(1970, 1, 1) + timedelta(seconds=worldSeconds)
+    # cumulative forward conversion function
+    def userDateToSpaceSeconds(self, userShift, uDt):
+        aretzDate = self.shiftToAretzDate(userShift, uDt)
+        aretzSeconds = self.aretzDateToSeconds(aretzDate)
+        spaceSeconds = self.aretzSecondsToSpaceSeconds(aretzSeconds)
+        return spaceSeconds
+
+    # backward conversion functions
+    def spaceDateToSeconds(self, spDate):
+        t = spDate['Second'] + \
+            spDate['Minute'] * self.ratioMinutes + \
+            spDate['Hour'] * self.ratioHours + \
+            spDate['Day'] * self.ratioDays + \
+            spDate['Month'] * self.ratioMonths + \
+            spDate['Year'] * self.ratioYears
+        return t * spDate['Direction']
+
+    def spaceSecondsToAretzSeconds(self, spSeconds):
+        aretzSeconds = int(spSeconds * self.newSecondRatio + self.wBaseTime)
+        return aretzSeconds
+
+    def aretzSecondsToDate(self, arSeconds):
+        if arSeconds < 0:
+            aDt = datetime(1970, 1, 1) + timedelta(seconds=arSeconds)
         else:
-            dt = datetime.utcfromtimestamp(worldSeconds)
-        return dt
+            aDt = datetime.utcfromtimestamp(arSeconds)
+        return aDt
 
-    def epochSecondsToEpochTime(self, epSeconds):
-        direction = 'FST'
+    def shiftToUserDate(self, userShift, aDt):
+        h = int(userShift - self.baseShift)
+        m = int(60 * (userShift - self.baseShift - h))
+        delta = timedelta(hours=h, minutes=m)
+        return aDt + delta
+
+    # cumulative backward conversion function
+    def spaceSecondsToUserDate(self, userShift, spSeconds):
+        arSeconds = self.spaceSecondsToAretzSeconds(spSeconds)
+        aDt = self.aretzSecondsToDate(arSeconds)
+        uDt = self.shiftToUserDate(userShift, aDt)
+        return uDt
+
+    def dropYearAndReverseToPositive(self, spDate):
+        spDate['Year'] = 0
+        spSeconds = self.spaceDateToSeconds(spDate)
+        spSeconds += 100000000  # self.ratioYears
+        return self.spaceSecondsToDate(spSeconds)
+
+    # routine to find next annual event
+    def annualEventNext(self, eventSpaceDate, momentSpaceDate):
+        """ return in seconds """
+        if eventSpaceDate['Direction'] == -1:
+            eventSpaceDate = self.dropYearAndReverseToPositive(eventSpaceDate)
+        # this calculates the event in THIS year
+        eventSpaceDate['Year'] = momentSpaceDate['Year']
+        eventSec = self.spaceDateToSeconds(eventSpaceDate)
+        momentSec = self.spaceDateToSeconds(momentSpaceDate)
+        if eventSec < momentSec:
+            eventSec += 100000000  # self.ratioYears
+        return self.spaceSecondsToDate(eventSec)
+
+    # routine for difference in two space dates
+    def spaceTimeDelta(self, minuend, subtrahend):
+        left = self.spaceDateToSeconds(minuend)
+        right = self.spaceDateToSeconds(subtrahend)
+        delta = left - right
+        return self.spaceSecondsToDate(delta)
+
+    def spaceSecondsToDate(self, epSeconds):
+        direction = 1
         if epSeconds < 0:
-            direction = 'BST'
+            direction = -1
+        epSeconds = abs(epSeconds)
         epYear = int(epSeconds / self.ratioYears)
         t = epSeconds - epYear * self.ratioYears
         epMonth = int(t / self.ratioMonths)
@@ -124,131 +202,6 @@ class Epocher:
                 'Hour': epHour, 'Minute': epMinute, 'Second': epSecond,
                 'Direction': direction}
 
-    def epochTimeToEpochSeconds(self, epTime):
-        t = epTime['Second'] + \
-            epTime['Minute'] * self.ratioMinutes + \
-            epTime['Hour'] * self.ratioHours + \
-            epTime['Day'] * self.ratioDays + \
-            epTime['Month'] * self.ratioMonths + \
-            epTime['Year'] * self.ratioYears
-        return t
-
-    def dropYearAndReverseToPositive(self, epTime):
-        ept = epTime
-        ept['Year'] = 0
-        seconds = self.epochTimeToEpochSeconds(ept)
-        seconds += 100000000
-        return self.epochSecondsToEpochTime(seconds)
-
-    def epNextDobSecondsAndEpNowSeconds(self, timezone, year, month, day, hour, minu, sec=0):
-        # calculate epMomentSeconds and epDobSeconds
-        # self.adjustBaseTime(timezone)
-        wdtMoment = self.todayWorldTime(3)
-        epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
-        epMomentTime = self.epochSecondsToEpochTime(epMomentSeconds)
-        # function signature in user timezone. convert to UTC+2
-        h = int(3 - timezone)
-        m = int(60 * (3 - timezone - h))
-        delta = timedelta(hours=h, minutes=m)
-        wdtDob = datetime(year, month, day, hour, minu, sec) + delta
-
-        epDobSeconds = self.worldTimeToEpochSeconds(wdtDob)
-        # find NEXT epDobSeconds
-        epDobTime = self.epochSecondsToEpochTime(epDobSeconds)
-        if epDobTime[
-            'Direction'] == 'BST':  # check if DobTime before Start and reverse
-            epDobTime = self.dropYearAndReverseToPositive(epDobTime)
-        epDobTime['Year'] = epMomentTime['Year']
-        epDobSeconds = self.epochTimeToEpochSeconds(epDobTime)
-        if epDobSeconds < epMomentSeconds:  # if this year Dob past already
-            epDobSeconds += 100000000  # move forward to next year
-        return epDobSeconds, epMomentSeconds
-
-    # **********************************************************
-    #        interface functions
-    # **********************************************************
-    def getEpochTime(self, timezone):
-        # self.adjustBaseTime(timezone)
-        wDt = self.todayWorldTime(3)
-        epSeconds = self.worldTimeToEpochSeconds(wDt)
-        return self.epochSecondsToEpochTime(epSeconds)
-
-    def getEpochDob(self, timezone, year, month, day, hour, minu, sec=0):
-        # self.adjustBaseTime(timezone)
-        h = int(3 - timezone)
-        m = int(60 * (3 - timezone - h))
-        delta = timedelta(hours=h, minutes=m)
-        wDt = datetime(year, month, day, hour, minu, sec) + delta
-        epSeconds = self.worldTimeToEpochSeconds(wDt)
-        return self.epochSecondsToEpochTime(epSeconds)
-
-    def getEpochAge(self, timezone, year, month, day, hour, minu, sec=0):
-        # self.adjustBaseTime(timezone)
-        wdtMoment = self.todayWorldTime(3)
-        h = int(3 - timezone)
-        m = int(60 * (3 - timezone - h))
-        delta = timedelta(hours=h, minutes=m)
-        wdtDob = datetime(year, month, day, hour, minu, sec) + delta
-        epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
-        epDobSeconds = self.worldTimeToEpochSeconds(wdtDob)
-        epAge = epMomentSeconds - epDobSeconds
-        return self.epochSecondsToEpochTime(epAge)
-
-    def getEpochNextDobDate(self, timezone, year, month, day, hour, minu, sec=0):
-        epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
-        return self.epochSecondsToEpochTime(epDobSeconds)
-
-    def getEpochTimeUntilNextDob(self, timezone, year, month, day, hour, minu, sec=0):
-        epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
-        wdtMoment = self.todayWorldTime(3)
-        epMomentSeconds = self.worldTimeToEpochSeconds(wdtMoment)
-        epUntil = epDobSeconds - epMomentSeconds
-        return self.epochSecondsToEpochTime(epUntil)
-
-    def getEpochNextDobWorldDate(self, timezone, year, month, day, hour, minu, sec=0):
-        epDobSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)[0]
-        dt = self.epochSecondsToWorldTime(epDobSeconds, timezone)
-        h = int(timezone - 3)
-        m = int(60 * (timezone - 3 - h))
-        delta = timedelta(hours=h, minutes=m)
-        return dt + delta
-
-    def epochDaysToNextDob(self, timezone, year, month, day, hour, minu, sec=0):
-        epDobSeconds, epMomentSeconds = self.epNextDobSecondsAndEpNowSeconds(timezone, year, month, day, hour, minu, sec)
-        diff = epDobSeconds - epMomentSeconds
-        return self.epochSecondsToEpochTime(diff)
-
-    def getEpochEventDate(self, timezone, year, month, day, hour, minu, sec=0):
-        return self.getEpochDob(timezone, year, month, day, hour, minu, sec)
-
-    def getWorldEventDate(self, timezone, year, month, day, hour, minu,
-                          direction):
-        epSeconds = self.epochTimeToEpochSeconds(dict(Second=0 * direction,
-                                                      Minute=minu * direction,
-                                                      Hour=hour * direction,
-                                                      Day=day * direction,
-                                                      Month=month * direction,
-                                                      Year=year * direction))
-        dt = self.epochSecondsToWorldTime(epSeconds, timezone)
-        h = int(timezone - 3)
-        m = int(60 * (timezone - 3 - h))
-        delta = timedelta(hours=h, minutes=m)
-        return (dt + delta).isoformat()
-
 
 if __name__ == '__main__':
     ep = Epocher()
-    ep.adjustBaseTime(0)
-    print(datetime.utcfromtimestamp(ep.wBaseTime))
-    print(ep.todayWorldTime(0))
-    epSec = ep.worldTimeToEpochSeconds(datetime(1972, 7, 14, 14, 30))
-    print(epSec)
-    epT = ep.epochSecondsToEpochTime(epSec)
-    print(epT)
-    print(ep.epochTimeToEpochSeconds(epT))
-    print('Epoch Age', ep.getEpochAge(0, 1975, 11, 10, 12, 50))
-    print('Epoch Dob:', ep.getEpochDob(0, 1975, 11, 10, 12, 50))
-    print('Today epoch date:', ep.getEpochTime(0))
-    print('Epoch Next Dob', ep.getEpochNextDobDate(0, 1975, 11, 10, 12, 50))
-    print('World Next Dob', ep.getEpochNextDobWorldDate(0, 1975, 11, 10, 12, 50))
-    print('Epoch days to next Dob', ep.epochDaysToNextDob(0, 1975, 11, 10, 12, 50))

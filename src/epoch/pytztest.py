@@ -8,10 +8,10 @@ from prettytable import PrettyTable
 out = PrettyTable(['Name', 'UTC shift', 'TZ abbrev'])
 # https://code.google.com/archive/p/prettytable/wikis/Tutorial.wiki
 out.align['Name'] = 'l'
-date = datetime(1985, 6, 14)
+date = datetime(2017, 5, 11)
 # country codes:
 # https://www.iso.org/obp/ui/#search
-countryCode = 'US'
+countryCode = 'RU'
 tzrange = country_timezones(countryCode)
 tzAmt = len(tzrange)
 print('{0} has {1} timezones'.format(countryCode, tzAmt))
