@@ -5,6 +5,9 @@ from django.http import HttpResponse
 from django import forms
 from .models import Epocher
 
+from django.template import Template, Context
+
+
 Ep = Epocher()
 
 tzChoices = [(-12, 'GMT-12'), (-11, 'GMT-11'), (-10, 'GMT-10'),
@@ -28,7 +31,7 @@ monthChoices = [(1, 'Jan'), (2, 'Feb'), (3, 'Mar'), (4, 'Apr'),
 class formWorldToAlt(forms.Form):
     def __init__(self, *args, **kwargs):
         super(formWorldToAlt, self).__init__(*args, **kwargs)
-        self.initial['timezone'] = 2
+        # self.initial['timezone'] = 2
 
     timezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
     day = forms.IntegerField(label="Day", min_value=1, max_value=31)
@@ -41,7 +44,7 @@ class formWorldToAlt(forms.Form):
 class formAltToWorld(forms.Form):
     def __init__(self, *args, **kwargs):
         super(formAltToWorld, self).__init__(*args, **kwargs)
-        self.initial['wtimezone'] = 2
+        # self.initial['wtimezone'] = 2
         self.initial['wdirection'] = 1
 
     wtimezone = forms.ChoiceField(label="Time zone", choices=tzChoices)
@@ -59,26 +62,10 @@ menuSet = [{'caption': 'Homepage', 'viewName': 'epochTime'},
            {'caption': 'The New Time', 'viewName': 'calculation'}]
 
 
-# https://siongui.github.io/2012/10/11/python-parse-accept-language-in-http-request-header/#id5
-# https://siongui.github.io/2012/10/12/detect-user-language-locale-gae-python/
-def parseAcceptLanguage(acceptLanguage):
-    languages = acceptLanguage.split(",")
-    locale_q_pairs = []
-    for language in languages:
-        if language.split(";")[0] == language:
-            # no q => q = 1
-            locale_q_pairs.append((language.strip(), "1"))
-        else:
-            locale = language.split(";")[0].strip()
-            q = language.split(";")[1].split("=")[1]
-            locale_q_pairs.append((locale, q))
-    return locale_q_pairs
-
-
 def epochTime(request):
-    if not request.session.session_key:
-        request.session.create()
-    print(request.session.session_key)
+    # if not request.session.session_key:
+    #     request.session.create()
+    # print(request.session.session_key)
 
     footerItems = [menuSet[1], menuSet[2], menuSet[3]]
     dt = datetime.utcnow()
@@ -107,7 +94,11 @@ def birthday(request):
             content_type="application/json")
     else:
         # this is on page load
-        form = formWorldToAlt()
+        ini = {}
+        if 'country' in request.session:
+            if request.session['country'] == 'RU':
+                ini = dict(timezone=6)
+        form = formWorldToAlt(initial=ini)
         return render(request, 'epoch/birthday.html',
                       {'footerItems': footerItems, 'form': form})
 
@@ -134,9 +125,8 @@ def bridge(request):
             content_type="application/json"
         )
     else:
-
-        formW = formWorldToAlt()
-        formA = formAltToWorld()
+        formW = formWorldToAlt(initial=dict(timezone=3))
+        formA = formAltToWorld(initial=dict(wtimezone=3))
         return render(request, 'epoch/bridge.html',
                       dict(footerItems=footerItems, formW=formW, formA=formA))
 
@@ -152,3 +142,12 @@ def calculation(request):
                        toWorld=toWorld,
                        units=units)
                   )
+
+def testick(request):
+    # http://stackoverflow.com/questions/3889769/how-can-i-get-all-the-request-headers-in-django
+    t = Template(('<b>request.META</b><br>'
+                  '{% for k_meta, v_meta in request.META.items %}'
+                  '<code>{{ k_meta }}</code> : {{ v_meta }} <br>'
+                  '{% endfor %}'))
+    c = Context(dict(request=request))
+    return HttpResponse(t.render(c))
